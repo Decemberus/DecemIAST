@@ -23,33 +23,41 @@ public class SourceClassVisitorHandler implements Handler {
 			return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
 				@Override
 				protected void onMethodEnter() {
-					loadArgArray();
-					int argsIndex = newLocal(Type.getType(Object[].class));
-					storeLocal(argsIndex, Type.getType(Object[].class));
-					loadLocal(argsIndex);
-					push(className);
-					push(name);
-					push(desc);
-					push(isStatic);
+					try {
+						loadArgArray();
+						int argsIndex = newLocal(Type.getType(Object[].class));
+						storeLocal(argsIndex, Type.getType(Object[].class));
+						loadLocal(argsIndex);
+						push(className);
+						push(name);
+						push(desc);
+						push(isStatic);
 
-					mv.visitMethodInsn(INVOKESTATIC, "cn/org/enjoy/iast/core/Source", "enterSource", "([Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V", false);
-					super.onMethodEnter();
+						mv.visitMethodInsn(INVOKESTATIC, "cn/org/enjoy/iast/core/Source", "enterSource", "([Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V", false);
+						super.onMethodEnter();
+					} catch (Exception e) {
+						throw new RuntimeException("Source Process Error",e);
+					}
 				}
 
 				@Override
 				protected void onMethodExit(int opcode) {
-					Type returnType = Type.getReturnType(desc);
-					if (returnType == null || Type.VOID_TYPE.equals(returnType)) {
-						push((Type) null);
-					} else {
-						mv.visitInsn(Opcodes.DUP);
+					try {
+						Type returnType = Type.getReturnType(desc);
+						if (returnType == null || Type.VOID_TYPE.equals(returnType)) {
+							push((Type) null);
+						} else {
+							mv.visitInsn(Opcodes.DUP);
+						}
+						push(className);
+						push(name);
+						push(desc);
+						push(isStatic);
+						mv.visitMethodInsn(INVOKESTATIC, "cn/org/enjoy/iast/core/Source", "leaveSource", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V", false);
+						super.onMethodExit(opcode);
+					} catch (Exception e) {
+						throw new RuntimeException("Source Process Error",e);
 					}
-					push(className);
-					push(name);
-					push(desc);
-					push(isStatic);
-					mv.visitMethodInsn(INVOKESTATIC, "cn/org/enjoy/iast/core/Source", "leaveSource", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V", false);
-					super.onMethodExit(opcode);
 				}
 			};
 		}

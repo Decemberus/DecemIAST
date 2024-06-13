@@ -33,39 +33,51 @@ public class PropagatorClassVisitorHandler implements Handler {
 				return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
 					@Override
 					protected void onMethodEnter() {
-						loadArgArray();
-						int argsIndex = newLocal(argsType);
-						storeLocal(argsIndex, argsType);
-						loadLocal(argsIndex);
-						push(className);
-						push(name);
-						push(desc);
-						push(isStatic);
+						try {
+							loadArgArray();
+							int argsIndex = newLocal(argsType);
+							storeLocal(argsIndex, argsType);
+							loadLocal(argsIndex);
+							push(className);
+							push(name);
+							push(desc);
+							push(isStatic);
 
-						mv.visitMethodInsn(INVOKESTATIC, "cn/org/enjoy/iast/core/Propagator",
-								"enterPropagator",
-								"([Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V",
-								false);
-						super.onMethodEnter();
+							mv.visitMethodInsn(INVOKESTATIC, "cn/org/enjoy/iast/core/Propagator",
+									"enterPropagator",
+									"([Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V",
+									false);
+							super.onMethodEnter();
+						}catch (Exception e){
+							System.err.println("Propagator Process Error: " + e.getMessage());
+							throw new IllegalStateException("进入方法时错误",e);
+						}
+
 					}
 
 					@Override
 					protected void onMethodExit(int opcode) {
-						Type returnType = Type.getReturnType(desc);
-						if (returnType == null || Type.VOID_TYPE.equals(returnType)) {
-							push((Type) null);
-						} else {
-							mv.visitInsn(Opcodes.DUP);
+
+						try {
+							Type returnType = Type.getReturnType(desc);
+							if (returnType == null || Type.VOID_TYPE.equals(returnType)) {
+								push((Type) null);
+							} else {
+								mv.visitInsn(Opcodes.DUP);
+							}
+							push(className);
+							push(name);
+							push(desc);
+							push(isStatic);
+							mv.visitMethodInsn(INVOKESTATIC, "cn/org/enjoy/iast/core/Propagator",
+									"leavePropagator",
+									"(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V",
+									false);
+							super.onMethodExit(opcode);
+						} catch (Exception e) {
+							System.err.println("Propagator Process Error: " + e.getMessage());
+							throw new IllegalStateException("退出方法时错误",e);
 						}
-						push(className);
-						push(name);
-						push(desc);
-						push(isStatic);
-						mv.visitMethodInsn(INVOKESTATIC, "cn/org/enjoy/iast/core/Propagator",
-								"leavePropagator",
-								"(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V",
-								false);
-						super.onMethodExit(opcode);
 					}
 				};
 			}

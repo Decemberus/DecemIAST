@@ -25,20 +25,24 @@ public class SinkClassVisitorHandler implements Handler {
 			return new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
 				@Override
 				protected void onMethodEnter() {
-					loadArgArray();
-					int argsIndex = newLocal(argsType);
-					storeLocal(argsIndex, argsType);
-					loadThis();
-					loadLocal(argsIndex);
-					push(className);
-					push(name);
-					push(desc);
-					push(isStatic);
+					try {
+						loadArgArray();
+						int argsIndex = newLocal(argsType);
+						storeLocal(argsIndex, argsType);
+						loadThis();
+						loadLocal(argsIndex);
+						push(className);
+						push(name);
+						push(desc);
+						push(isStatic);
 
-					mv.visitMethodInsn(INVOKESTATIC, "cn/org/enjoy/iast/core/Sink", "enterSink",
-							"([Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V",
-							false);
-					super.onMethodEnter();
+						mv.visitMethodInsn(INVOKESTATIC, "cn/org/enjoy/iast/core/Sink", "enterSink",
+								"([Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V",
+								false);
+						super.onMethodEnter();
+					} catch (Exception e) {
+						throw new RuntimeException("Sink Process Error",e);
+					}
 				}
 			};
 		}
