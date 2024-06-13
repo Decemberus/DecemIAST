@@ -5,6 +5,8 @@ import cn.org.enjoy.iast.contenxt.RequestContext;
 import cn.org.enjoy.iast.http.IASTServletRequest;
 import cn.org.enjoy.iast.http.IASTServletResponse;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
 
 
@@ -16,10 +18,13 @@ public class Http {
 	public static void leaveHttp() {
 		IASTServletRequest request = RequestContext.getHttpRequestContextThreadLocal()
 				.getServletRequest();
-		System.out.printf("URL            : %s \n", request.getRequestURL().toString());
-		System.out.printf("URI            : %s \n", request.getRequestURI().toString());
-		System.out.printf("QueryString    : %s \n", request.getQueryString().toString());
-		System.out.printf("HTTP Method    : %s \n", request.getMethod());
+		if (!request.getRequestURI().contains("favicon.ico")&&!request.getRequestURI().equals("/")) {
+			//防止一开始初始化的时候就各种打印信息
+			System.out.printf("URL            : %s \n", request.getRequestURL().toString());
+			System.out.printf("URI            : %s \n", request.getRequestURI().toString());
+			System.out.printf("QueryString    : %s \n", request.getQueryString().toString());
+			System.out.printf("HTTP Method    : %s \n", request.getMethod());
+		}
 		RequestContext.getHttpRequestContextThreadLocal().getCallChain().forEach(item -> {
 			if (item.getChainType().contains("leave")) {
 				String returnData = null;
@@ -43,17 +48,34 @@ public class Http {
 
 			// 如果是Sink类型，则还会输出调用栈信息
 			if (item.getChainType().contains("Sink")) {
-				int                 depth    = 1;
-				StackTraceElement[] elements = item.getStackTraceElement();
+				FileWriter writer = null;
+				try {
+					writer = new FileWriter("D:\\Code_Project\\Java\\DecemIAST\\iast\\src\\main\\java\\cn\\org\\enjoy\\result\\callstack.txt", true); // true表示追加到文件末尾
+					int depth = 1;
+					StackTraceElement[] elements = item.getStackTraceElement();
 
-				for (StackTraceElement element : elements) {
-					if (element.getClassName().contains("cn.org.javaweb.iast") ||
-							element.getClassName().contains("java.lang.Thread")) {
-						continue;
+					for (StackTraceElement element : elements) {
+						if (element.getClassName().contains("cn.org.javaweb.iast") ||
+								element.getClassName().contains("java.lang.Thread") ||
+								element.getClassName().contains("sun.reflect.GeneratedMethodAccessor") ||
+								element.getMethodName().equals("invoke")) {
+							continue;
+						}
+						String stackTraceLine = String.format("%" + depth + "s", "") + element.toString() + "\n";
+						writer.write(stackTraceLine);
+						System.out.println(stackTraceLine);
+						depth++;
 					}
-					System.out.printf("%9s".replace("9", String.valueOf(depth)), "");
-					System.out.println(element);
-					depth++;
+				} catch (IOException e) {
+					e.printStackTrace();
+				} finally {
+					if (writer != null) {
+						try {
+							writer.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
 				}
 			}
 		});
