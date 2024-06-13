@@ -27,12 +27,12 @@ public class AgentTransform implements ClassFileTransformer {
 	                        byte[] classfileBuffer) throws IllegalClassFormatException {
 
 		className = className.replace("/", ".");
-		if (className.contains("cn.org.javaweb.iast")) {
+		if (className.contains("cn.org.enjoy")) {
 			System.out.println("Skip class: " + className);
 			return classfileBuffer;
 		}
 
-		if (className.contains("java.lang.invoke")) {
+		if (className.contains("java.lang.invoke")||className.contains("java.util.Arrays")||className.contains("java.util.Collections")) {
 			System.out.println("Skip class: " + className);
 			return classfileBuffer;
 		}
@@ -51,7 +51,7 @@ public class AgentTransform implements ClassFileTransformer {
 		String regexp = "(Decoder|Servlet|connector|Request|Parameters|Base64|Runtime|ProcessBuilder)";
 
 		if (Pattern.compile(regexp).matcher(className).find()) {
-			ClassUtils.dumpClassFile("D:\\Code_Project\\Java\\java_iast_example\\iast\\src\\main\\java\\cn\\org\\javaweb\\test\\test", className, classfileBuffer, originalClassfileBuffer);
+			ClassUtils.dumpClassFile("D:\\Code_Project\\Java\\DecemIAST\\iast\\src\\main\\java\\cn\\org\\enjoy\\test\\test", className, classfileBuffer, originalClassfileBuffer);
 		}
 
 		return classfileBuffer;
