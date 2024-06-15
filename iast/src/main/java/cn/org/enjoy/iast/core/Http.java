@@ -22,7 +22,7 @@ public class Http {
 	/**
 	 * 在HTTP方法结束前调用，主要是对存在当前上下文的结果进行可视化打印输出
 	 */
-	public static void leaveHttp() {
+	public static void leaveHttp() throws IOException {
 		//启动时首先会调用一边leaveHttp
 		IASTServletRequest request = RequestContext.getHttpRequestContextThreadLocal()
 				.getServletRequest();
@@ -33,6 +33,7 @@ public class Http {
 			System.out.printf("QueryString    : %s \n", request.getQueryString().toString());
 			System.out.printf("HTTP Method    : %s \n", request.getMethod());
 		}
+		//replayRequest(request);
 			//获取当前上下文的调用链
 			RequestContext.getHttpRequestContextThreadLocal().getCallChain().forEach(item -> {
 			if (item.getChainType().contains("leave")) {
@@ -102,9 +103,24 @@ public class Http {
 		return context != null;
 	}
 
+	public static boolean haveHackString(IASTServletRequest record){
+		String querystring = record.getQueryString().toString();
+		String[] blacklist = {"ls", "whoami"};
+
+		for (String hackString : blacklist) {
+			if (querystring.contains(hackString)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+
 	public static void replayRequest(IASTServletRequest record) throws IOException {
 
+		if (haveHackString(record)) {
 			HttpClient httpClient = HttpClients.createDefault();
+			System.out.println("Can enter next Step");
 
 			// 根据请求类型创建对应的Http请求
 			if ("POST".equals(record.getMethod().toString())) {
@@ -136,7 +152,7 @@ public class Http {
 				System.out.println("Response Code : " + response.getStatusLine().getStatusCode());
 				System.out.println("Response Body : " + EntityUtils.toString(response.getEntity()));
 			}
-
+		}
 
 
 	}
