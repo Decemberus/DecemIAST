@@ -102,7 +102,11 @@ public class Http {
 		HttpRequestContext context = RequestContext.getHttpRequestContextThreadLocal();
 		return context != null;
 	}
-
+	/**
+	 * 匹配命令执行语句
+	 *
+	 * @return boolean
+	 */
 	public static boolean haveHackString(IASTServletRequest record){
 		String querystring = record.getQueryString().toString();
 		String[] blacklist = {"ls", "whoami"};
@@ -115,7 +119,10 @@ public class Http {
 		return false;
 	}
 
-
+	/**
+	 * 流量重放功能，但还存在一些小问题
+	 *
+	 */
 	public static void replayRequest(IASTServletRequest record) throws IOException {
 
 		if (haveHackString(record)) {
