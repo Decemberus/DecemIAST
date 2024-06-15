@@ -22,7 +22,7 @@ iast文件夹是主要的插桩程序，test-struts2是运行的测试环境
 http://localhost:8080/cmd.jsp?cmd=ls
 ```
 
-项目会保存调用栈与调用信息到`cn/org/enjoy/result`目录，并匹配相应的字符进行重定向验证
+项目会保存调用栈与调用信息到`cn/org/enjoy/result`目录，并通过流量重放进行验证
 
 
 
