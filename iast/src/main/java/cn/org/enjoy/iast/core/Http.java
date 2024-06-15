@@ -9,6 +9,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 
 public class Http {
 
@@ -16,6 +23,7 @@ public class Http {
 	 * 在HTTP方法结束前调用，主要是对存在当前上下文的结果进行可视化打印输出
 	 */
 	public static void leaveHttp() {
+		//启动时首先会调用一边leaveHttp
 		IASTServletRequest request = RequestContext.getHttpRequestContextThreadLocal()
 				.getServletRequest();
 		if (!request.getRequestURI().contains("favicon.ico")&&!request.getRequestURI().equals("/")) {
@@ -25,7 +33,8 @@ public class Http {
 			System.out.printf("QueryString    : %s \n", request.getQueryString().toString());
 			System.out.printf("HTTP Method    : %s \n", request.getMethod());
 		}
-		RequestContext.getHttpRequestContextThreadLocal().getCallChain().forEach(item -> {
+			//获取当前上下文的调用链
+			RequestContext.getHttpRequestContextThreadLocal().getCallChain().forEach(item -> {
 			if (item.getChainType().contains("leave")) {
 				String returnData = null;
 				if (item.getReturnObject().getClass().equals(byte[].class)) {
@@ -50,6 +59,7 @@ public class Http {
 			if (item.getChainType().contains("Sink")) {
 				FileWriter writer = null;
 				try {
+
 					writer = new FileWriter("D:\\Code_Project\\Java\\DecemIAST\\iast\\src\\main\\java\\cn\\org\\enjoy\\result\\callstack.txt", true); // true表示追加到文件末尾
 					int depth = 1;
 					StackTraceElement[] elements = item.getStackTraceElement();
@@ -66,6 +76,7 @@ public class Http {
 						System.out.println(stackTraceLine);
 						depth++;
 					}
+					replayRequest(request);
 				} catch (IOException e) {
 					e.printStackTrace();
 				} finally {
@@ -89,6 +100,45 @@ public class Http {
 	public static boolean haveEnterHttp() {
 		HttpRequestContext context = RequestContext.getHttpRequestContextThreadLocal();
 		return context != null;
+	}
+
+	public static void replayRequest(IASTServletRequest record) throws IOException {
+
+			HttpClient httpClient = HttpClients.createDefault();
+
+			// 根据请求类型创建对应的Http请求
+			if ("POST".equals(record.getMethod().toString())) {
+				HttpPost httpPost = new HttpPost(record.getRequestURL().toString());
+
+				// 设置请求体
+				if (record.getRequestBody() != null) {
+					httpPost.setEntity(new StringEntity(record.getRequestBody()));
+				}
+
+				// 发送请求并获取响应
+				HttpResponse response = httpClient.execute(httpPost);
+
+				// 打印响应状态码和响应体
+				System.out.println("Response Code : " + response.getStatusLine().getStatusCode());
+				System.out.println("Response Body : " + EntityUtils.toString(response.getEntity()));
+			} else if ("GET".equals(record.getMethod())) {
+
+				String baseUri = record.getRequestURL().toString();
+				String queryString = record.getQueryString();
+				String fullUri = baseUri;
+				if (queryString != null && !queryString.isEmpty()) {
+					fullUri += "?" + queryString;
+				}
+
+
+				HttpGet httpGet = new HttpGet(fullUri);
+				HttpResponse response = httpClient.execute(httpGet);
+				System.out.println("Response Code : " + response.getStatusLine().getStatusCode());
+				System.out.println("Response Body : " + EntityUtils.toString(response.getEntity()));
+			}
+
+
+
 	}
 
 

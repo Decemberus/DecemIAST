@@ -1,7 +1,9 @@
 package cn.org.enjoy.iast.http;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.util.Enumeration;
@@ -18,6 +20,23 @@ public class IASTServletRequest {
 		this.request = request;
 		this.requestClass = request.getClass();
 	}
+
+	public String getRequestBody() {
+		try {
+			HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+			BufferedReader reader = new BufferedReader(new InputStreamReader(httpServletRequest.getInputStream()));
+			StringBuilder builder = new StringBuilder();
+			String line;
+			while ((line = reader.readLine()) != null) {
+				builder.append(line);
+			}
+			return builder.toString();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 
 	public Class getRequestClass() {
 		return requestClass;
