@@ -18,11 +18,13 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 public class Http {
+//	private static boolean isExecOnce = true;
+	private static ThreadLocal<Boolean> isExecOnce = ThreadLocal.withInitial(() -> true);
 
 	/**
 	 * 在HTTP方法结束前调用，主要是对存在当前上下文的结果进行可视化打印输出
 	 */
-	public static void leaveHttp() throws IOException {
+	public static void leaveHttp() throws IOException, ClassNotFoundException {
 		//启动时首先会调用一边leaveHttp
 		IASTServletRequest request = RequestContext.getHttpRequestContextThreadLocal()
 				.getServletRequest();
@@ -33,11 +35,7 @@ public class Http {
 			System.out.printf("QueryString    : %s \n", request.getQueryString().toString());
 			System.out.printf("HTTP Method    : %s \n", request.getMethod());
 		}
-		try {
-			replayRequest(request);
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException(e);
-		}
+//		replayRequest(request);
 		//获取当前上下文的调用链
 			RequestContext.getHttpRequestContextThreadLocal().getCallChain().forEach(item -> {
 			if (item.getChainType().contains("leave")) {
@@ -78,12 +76,14 @@ public class Http {
 						}
 						String stackTraceLine = String.format("%" + depth + "s", "") + element.toString() + "\n";
 						writer.write(stackTraceLine);
-						System.out.println(stackTraceLine);
+						System.out.print(stackTraceLine);
 						depth++;
 					}
-//					replayRequest(request);
+					replayRequest(request);
 				} catch (IOException e) {
 					e.printStackTrace();
+				} catch (ClassNotFoundException e) {
+					throw new RuntimeException(e);
 				} finally {
 					if (writer != null) {
 						try {
@@ -135,7 +135,7 @@ public class Http {
 			System.out.println("Can enter next Step");
 
 			// 根据请求类型创建对应的Http请求
-			if ("POST".equals(record.getMethod().toString())) {
+			if ("POST".equals(record.getMethod())) {
 				HttpPost httpPost = new HttpPost(record.getRequestURL().toString());
 
 				// 设置请求体
@@ -160,9 +160,16 @@ public class Http {
 
 
 				HttpGet httpGet = new HttpGet(fullUri);
-				HttpResponse response = httpClient.execute(httpGet);
-				System.out.println("Response Code : " + response.getStatusLine().getStatusCode());
-				System.out.println("Response Body : " + EntityUtils.toString(response.getEntity()));
+
+				//这里的httpClient会被执行多遍，故引入一个execOne来空中
+				HttpResponse response = null;
+				if (isExecOnce.get()) {
+					isExecOnce.set(false);
+					response = httpClient.execute(httpGet);
+					System.out.println("Response Code : " + response.getStatusLine().getStatusCode());
+					System.out.println("Response Body : " + EntityUtils.toString(response.getEntity()));
+				}
+
 			}
 		}
 
