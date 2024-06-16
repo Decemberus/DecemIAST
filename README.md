@@ -1,16 +1,17 @@
 # DecemIAST
 
-本项目实现了一个简单的IAST的demo
+本项目实现了一个简单的Active IAST的demo
 
 
 
-iast文件夹是主要的插桩程序，test-struts2是运行的测试环境
+iast文件夹是主要的插桩程序，用来对程序进行主动插桩和流量重放
+test-struts2是运行的测试环境，里面写了一个测试命令执行的页面
 
 ## 配置与运行
 
 - 使用maven package包
 
-- 选用tomcat8，配置好相应的虚拟机选项
+- 选用tomcat8，配置好相应的虚拟机选项，其中-Xbootclasspath/p为了解决在双亲委派机制下Agent找不到类的为题
 
 ```
 -Dfile.encoding=GBK -noverify -Xbootclasspath/p:D:/Code_Project/Java/DecemIAST/iast/target/agent.jar -javaagent:D:/Code_Project/Java/DecemIAST/iast/target/agent.jar
