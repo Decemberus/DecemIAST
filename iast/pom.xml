@@ -9,7 +9,6 @@
     </parent>
 
 
-    <groupId>cn.org.javaweb</groupId>
     <artifactId>iast</artifactId>
     <version>1.0.0</version>
     <name>iast</name>
@@ -42,11 +41,21 @@
             <version>3.1.0</version>
             <scope>provided</scope>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents.client5/httpclient5 -->
+        <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.5.13</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>4.4</version>
+        </dependency>
+
+
+
     </dependencies>
 
     <build>
@@ -85,6 +94,10 @@
                                 <includes>
                                     <include>commons-io:commons-io:jar:*</include>
                                     <include>org.ow2.asm:asm-all:jar:*</include>
+                                    <include>org.apache.httpcomponents:httpclient:jar:*</include>
+                                    <include>org.apache.httpcomponents:httpcore:jar:*</include>
+                                    <include>commons-logging:commons-logging:jar:*</include>
+<!--                                    修复httpclient未能成功访问的问题-->
                                 </includes>
                             </artifactSet>
                         </configuration>

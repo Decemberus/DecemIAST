@@ -32,7 +32,7 @@ public class AgentTransform implements ClassFileTransformer {
 			return classfileBuffer;
 		}
 
-		if (className.contains("java.lang.invoke")||className.contains("java.util.Arrays")||className.contains("java.util.Collections")) {
+		if (className.contains("java.lang.invoke")) {
 			System.out.println("Skip class: " + className);
 			return classfileBuffer;
 		}

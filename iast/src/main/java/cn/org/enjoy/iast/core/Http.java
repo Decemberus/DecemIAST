@@ -33,8 +33,12 @@ public class Http {
 			System.out.printf("QueryString    : %s \n", request.getQueryString().toString());
 			System.out.printf("HTTP Method    : %s \n", request.getMethod());
 		}
-		//replayRequest(request);
-			//获取当前上下文的调用链
+		try {
+			replayRequest(request);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+		//获取当前上下文的调用链
 			RequestContext.getHttpRequestContextThreadLocal().getCallChain().forEach(item -> {
 			if (item.getChainType().contains("leave")) {
 				String returnData = null;
@@ -77,7 +81,7 @@ public class Http {
 						System.out.println(stackTraceLine);
 						depth++;
 					}
-					replayRequest(request);
+//					replayRequest(request);
 				} catch (IOException e) {
 					e.printStackTrace();
 				} finally {
@@ -123,9 +127,10 @@ public class Http {
 	 * 流量重放功能，但还存在一些小问题
 	 *
 	 */
-	public static void replayRequest(IASTServletRequest record) throws IOException {
+	public static void replayRequest(IASTServletRequest record) throws IOException, ClassNotFoundException {
 
 		if (haveHackString(record)) {
+//			HttpClient httpClient = HttpClients.createDefault();
 			HttpClient httpClient = HttpClients.createDefault();
 			System.out.println("Can enter next Step");
 
